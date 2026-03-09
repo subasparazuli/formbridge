@@ -1,74 +1,257 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Plus, Activity, Settings } from "lucide-react";
+import { Copy, Plus, Activity, Settings, Check, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase-browser";
+
+interface Form {
+    id: string;
+    name: string;
+    notify_email: string;
+    created_at: string;
+    submission_count?: number;
+    last_activity?: string;
+}
 
 export default function Dashboard() {
-    return (
-        <div className="min-h-screen bg-zinc-950">
-            <header className="border-b border-zinc-800/50 bg-black/50 backdrop-blur-md sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="font-semibold text-lg tracking-tight flex items-center gap-2">
-                        <span className="h-6 w-6 rounded-md bg-white text-black flex items-center justify-center text-xs font-bold ring-1 ring-zinc-100">Fb</span>
-                        Formbridge <span className="text-zinc-600 font-normal">/</span> <span className="text-zinc-400 font-normal">Dashboard</span>
-                    </div>
-                    <div className="h-8 w-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs text-zinc-400 font-medium">
-                        SP
-                    </div>
-                </div>
-            </header>
+    const [forms, setForms] = useState<Form[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
+    const [newFormName, setNewFormName] = useState("");
+    const [newFormEmail, setNewFormEmail] = useState("");
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+    const supabase = createClient();
 
+    useEffect(() => {
+        fetchForms();
+    }, []);
+
+    const fetchForms = async () => {
+        setIsLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Fetch forms
+            const { data: formsData, error: formsError } = await supabase
+                .from("forms")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false });
+
+            if (formsError) throw formsError;
+
+            // Fetch submission stats for each form
+            const formsWithStats = await Promise.all((formsData || []).map(async (form: any) => {
+                const { count, error: countError } = await supabase
+                    .from("submissions")
+                    .select("*", { count: "exact", head: true })
+                    .eq("form_id", form.id);
+
+                const { data: lastSub, error: lastSubError } = await supabase
+                    .from("submissions")
+                    .select("created_at")
+                    .eq("form_id", form.id)
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .single();
+
+                return {
+                    ...form,
+                    submission_count: count || 0,
+                    last_activity: lastSub ? new Date(lastSub.created_at).toLocaleDateString() : "Never"
+                };
+            }));
+
+            setForms(formsWithStats);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to fetch forms");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCreate = async () => {
+        if (!newFormName.trim() || !newFormEmail.trim()) {
+            toast.error("Name and Notification Email are required");
+            return;
+        }
+
+        setIsCreating(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            const { data, error } = await supabase
+                .from("forms")
+                .insert([
+                    {
+                        name: newFormName,
+                        notify_email: newFormEmail,
+                        user_id: user.id
+                    }
+                ])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            toast.success("Endpoint created successfully");
+            setIsCreateOpen(false);
+            setNewFormName("");
+            setNewFormEmail("");
+            fetchForms();
+        } catch (error: any) {
+            toast.error(error.message || "Failed to create endpoint");
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const copyToClipboard = (id: string) => {
+        const url = `${window.location.origin}/api/f/${id}`;
+        navigator.clipboard.writeText(url);
+        setCopiedId(id);
+        toast.success("Endpoint URL copied to clipboard");
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    return (
+        <div>
             <main className="max-w-7xl mx-auto px-6 py-12">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-zinc-50">Endpoints</h1>
                         <p className="text-zinc-400 mt-1">Manage and monitor your headless API endpoints.</p>
                     </div>
-                    <Button className="bg-white text-black hover:bg-zinc-200 transition-colors shadow-none font-medium">
-                        <Plus className="mr-2 h-4 w-4" /> Create Endpoint
-                    </Button>
+
+                    <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="bg-white text-black hover:bg-zinc-200 transition-colors shadow-none font-medium">
+                                <Plus className="mr-2 h-4 w-4" /> Create Endpoint
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-zinc-50">
+                            <DialogHeader>
+                                <DialogTitle>Create New Endpoint</DialogTitle>
+                                <DialogDescription className="text-zinc-400">
+                                    Create a new headless form endpoint to start receiving submissions.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="name" className="text-right text-zinc-300">
+                                        Name
+                                    </Label>
+                                    <Input
+                                        id="name"
+                                        placeholder="e.g. Waitlist Form"
+                                        className="col-span-3 bg-zinc-900 border-zinc-800 text-zinc-100"
+                                        value={newFormName}
+                                        onChange={(e) => setNewFormName(e.target.value)}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="email" className="text-right text-zinc-300">
+                                        Notify Email
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="your@email.com"
+                                        className="col-span-3 bg-zinc-900 border-zinc-800 text-zinc-100"
+                                        value={newFormEmail}
+                                        onChange={(e) => setNewFormEmail(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button
+                                    type="submit"
+                                    onClick={handleCreate}
+                                    className="bg-white text-black hover:bg-zinc-200"
+                                    disabled={isCreating}
+                                >
+                                    {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Create Endpoint
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="bg-zinc-900/40 border-zinc-800/60 shadow-none hover:bg-zinc-900/80 transition-colors group">
-                        <CardHeader className="pb-4">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                                        <CardTitle className="text-base text-zinc-100 font-medium">Contact Form</CardTitle>
+                {isLoading ? (
+                    <div className="flex justify-center py-20">
+                        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+                    </div>
+                ) : forms.length === 0 ? (
+                    <div className="text-center py-20 bg-zinc-900/40 rounded-xl border border-zinc-800/60 border-dashed">
+                        <p className="text-zinc-400 mb-4">No endpoints created yet.</p>
+                        <Button onClick={() => setIsCreateOpen(true)} variant="outline" className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800">
+                            Create your first endpoint
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {forms.map(form => (
+                            <Card key={form.id} className="bg-zinc-900/40 border-zinc-800/60 shadow-none hover:bg-zinc-900/80 transition-colors group">
+                                <CardHeader className="pb-4">
+                                    <div className="flex justify-between items-start">
+                                        <Link href={`/dashboard/${form.id}`} className="block flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                                                <CardTitle className="text-base text-zinc-100 font-medium group-hover:text-white transition-colors">
+                                                    {form.name}
+                                                </CardTitle>
+                                            </div>
+                                            <CardDescription className="text-zinc-500 text-sm">{form.notify_email}</CardDescription>
+                                        </Link>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 shrink-0">
+                                            <Settings className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                    <CardDescription className="text-zinc-500 text-sm">Acme Corp Website</CardDescription>
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800">
-                                    <Settings className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex items-center space-x-2 mb-6">
-                                <Input
-                                    readOnly
-                                    value="https://api.formbridge.dev/submit/e_1a2b3c4d"
-                                    className="bg-black/50 border-zinc-800 text-zinc-400 font-mono text-xs h-9 focus-visible:ring-0 cursor-text"
-                                />
-                                <Button size="icon" variant="outline" className="h-9 w-9 border-zinc-800 bg-black/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <div className="flex gap-8 text-sm border-t border-zinc-800/50 pt-4 mt-2">
-                                <div>
-                                    <div className="text-xl font-medium text-zinc-200 mb-1">1,204</div>
-                                    <div className="text-zinc-500 flex items-center gap-1.5"><Activity className="h-3.5 w-3.5" /> Submissions</div>
-                                </div>
-                                <div>
-                                    <div className="text-xl font-medium text-zinc-200 mb-1">2m ago</div>
-                                    <div className="text-zinc-500">Last Activity</div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center space-x-2 mb-6">
+                                        <Input
+                                            readOnly
+                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/f/${form.id}`}
+                                            className="bg-black/50 border-zinc-800 text-zinc-400 font-mono text-xs h-9 focus-visible:ring-0 cursor-text"
+                                        />
+                                        <Button
+                                            size="icon"
+                                            variant="outline"
+                                            onClick={() => copyToClipboard(form.id)}
+                                            className="h-9 w-9 border-zinc-800 bg-black/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors shrink-0"
+                                        >
+                                            {copiedId === form.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
+                                    <Link href={`/dashboard/${form.id}`}>
+                                        <div className="flex gap-8 text-sm border-t border-zinc-800/50 pt-4 mt-2 cursor-pointer group/stats">
+                                            <div>
+                                                <div className="text-xl font-medium text-zinc-200 mb-1 group-hover/stats:text-white transition-colors">{(form.submission_count || 0).toLocaleString()}</div>
+                                                <div className="text-zinc-500 flex items-center gap-1.5"><Activity className="h-3.5 w-3.5" /> Submissions</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-xl font-medium text-zinc-200 mb-1 group-hover/stats:text-white transition-colors">{form.last_activity}</div>
+                                                <div className="text-zinc-500">Last Activity</div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
             </main>
         </div>
     );

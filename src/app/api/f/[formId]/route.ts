@@ -56,13 +56,41 @@ export async function POST(
         if (supabase) {
             const { data: form, error: formError } = await supabase
                 .from('forms')
-                .select('id, name, notify_email')
+                .select('id, name, notify_email, user_id')
                 .eq('id', formId)
                 .single();
 
             if (formError || !form) {
                 console.error('Form not found or error:', formError);
                 return NextResponse.json({ error: 'Invalid Form ID' }, { status: 404 });
+            }
+
+            // 2.5 Check subscription limits
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('subscription_status')
+                .eq('id', form.user_id)
+                .single();
+
+            const isPro = profile?.subscription_status === 'pro';
+
+            if (!isPro) {
+                const { count, error: countError } = await supabase
+                    .from('submissions')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('form_id', formId);
+
+                if (countError) {
+                    console.error('Error counting submissions:', countError);
+                    return NextResponse.json({ error: 'Failed to check submission limits' }, { status: 500 });
+                }
+
+                if (count !== null && count >= 10) {
+                    return NextResponse.json(
+                        { success: false, error: 'Form submission limit reached on Free plan.' },
+                        { status: 403 }
+                    );
+                }
             }
 
             // 3. Save the submission data
@@ -94,12 +122,31 @@ export async function POST(
             // Mock mode if environment variables aren't set
             console.warn('Supabase not configured. Mocking clear submission success for Form ID:', formId);
             console.log('Submission data:', data);
+
+            // Mock tracking logic to test the limit feature
+            const globalAny = global as any;
+            if (!globalAny.mockSubmissions) {
+                globalAny.mockSubmissions = {};
+            }
+            if (!globalAny.mockSubmissions[formId]) {
+                globalAny.mockSubmissions[formId] = 0;
+            }
+
+            if (globalAny.mockSubmissions[formId] >= 10) {
+                return NextResponse.json(
+                    { success: false, error: 'Form submission limit reached on Free plan.' },
+                    { status: 403 }
+                );
+            }
+
+            globalAny.mockSubmissions[formId]++;
+            console.log(`Mock submission count: ${globalAny.mockSubmissions[formId]}/10`);
         }
 
         return NextResponse.json(
             { success: true, message: 'Submission received securely.' },
-            { status: 200 },
             {
+                status: 200,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'POST, OPTIONS',

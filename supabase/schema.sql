@@ -1,6 +1,13 @@
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
+-- Create profiles table
+create table public.profiles (
+    id uuid primary key, -- references auth.users(id) if using Supabase Auth
+    subscription_status text not null default 'free',
+    lemon_squeezy_customer_id text,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 -- Create forms table
 create table public.forms (
     id uuid default uuid_generate_v4() primary key,
@@ -38,6 +45,13 @@ create policy "Users can update their own forms"
 create policy "Users can delete their own forms" 
     on public.forms for delete 
     using (auth.uid() = user_id);
+
+-- Profiles RLS
+alter table public.profiles enable row level security;
+
+create policy "Users can view their own profile" 
+    on public.profiles for select 
+    using (auth.uid() = id);
 
 -- Submissions RLS
 alter table public.submissions enable row level security;
