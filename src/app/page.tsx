@@ -14,7 +14,7 @@ export default function Home() {
           <nav className="flex items-center gap-6 text-sm font-medium text-zinc-400">
             <Link href="#features" className="hover:text-white transition-colors">Features</Link>
             <Link href="#docs" className="hover:text-white transition-colors">Documentation</Link>
-            <Link href="/dashboard" className="text-white hover:text-zinc-200 transition-colors">Sign In</Link>
+            <Link href="/login" className="text-white hover:text-zinc-200 transition-colors">Sign In</Link>
           </nav>
         </div>
       </header>

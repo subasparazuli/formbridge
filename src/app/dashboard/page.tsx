@@ -5,11 +5,12 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Plus, Activity, Settings, Check, Loader2 } from "lucide-react";
+import { Copy, Plus, Activity, Settings, Check, Loader2, LogOut } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase-browser";
+import { signOut } from "@/app/auth/actions";
 
 interface Form {
     id: string;
@@ -28,6 +29,7 @@ export default function Dashboard() {
     const [newFormName, setNewFormName] = useState("");
     const [newFormEmail, setNewFormEmail] = useState("");
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [userEmail, setUserEmail] = useState<string>("");
     const supabase = createClient();
 
     useEffect(() => {
@@ -39,6 +41,7 @@ export default function Dashboard() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
+            setUserEmail(user.email || '');
 
             // Fetch forms
             const { data: formsData, error: formsError } = await supabase
@@ -126,6 +129,32 @@ export default function Dashboard() {
 
     return (
         <div>
+            {/* Dashboard Header */}
+            <header className="border-b border-zinc-800/50 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                    <Link href="/" className="font-semibold text-xl tracking-tight flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-md bg-white text-black flex items-center justify-center text-xs font-bold ring-1 ring-zinc-100">Fb</span>
+                        Formbridge
+                    </Link>
+                    <div className="flex items-center gap-4">
+                        {userEmail && (
+                            <span className="text-sm text-zinc-400 hidden sm:block">{userEmail}</span>
+                        )}
+                        <form action={signOut}>
+                            <Button
+                                type="submit"
+                                variant="ghost"
+                                size="sm"
+                                className="text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors gap-2"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                <span className="hidden sm:inline">Sign Out</span>
+                            </Button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
             <main className="max-w-7xl mx-auto px-6 py-12">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                     <div>
