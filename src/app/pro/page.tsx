@@ -11,6 +11,7 @@ export default function ProSubscriptionPage() {
   const paddle = usePaddle();
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -19,10 +20,20 @@ export default function ProSubscriptionPage() {
       if (user) {
         setUserId(user.id);
         setUserEmail(user.email || null);
+        
+        const { data } = await supabase
+            .from('profiles')
+            .select('subscription_status')
+            .eq('id', user.id)
+            .single();
+        
+        if (data?.subscription_status === 'pro') {
+            setIsPro(true);
+        }
       }
     };
     getUser();
-  }, [supabase.auth]);
+  }, [supabase.auth, supabase]);
 
   const handleCheckout = () => {
     if (!paddle) {
@@ -39,7 +50,7 @@ export default function ProSubscriptionPage() {
     paddle.Checkout.open({
       items: [
         {
-          priceId: 'pri_12345', // Replace with your actual Paddle Price ID
+          priceId: 'pri_01kq73sxqt49mkncc52dz54bpa',
           quantity: 1
         }
       ],
@@ -109,14 +120,29 @@ export default function ProSubscriptionPage() {
             ))}
           </div>
 
-          <Button
-            size="lg"
-            className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]"
-            onClick={handleCheckout}
-            disabled={!paddle}
-          >
-            {paddle ? 'Subscribe Pro' : 'Loading Checkout...'}
-          </Button>
+          <div className="space-y-4">
+            <Button
+              size="lg"
+              className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleCheckout}
+              disabled={!paddle || isPro}
+            >
+              {isPro ? 'Already Subscribed' : (paddle ? 'Subscribe Pro' : 'Loading Checkout...')}
+            </Button>
+
+            {isPro && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-12 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
+                asChild
+              >
+                <Link href="mailto:support@formbridge.dev?subject=Manage%20Subscription">
+                  Manage Subscription
+                </Link>
+              </Button>
+            )}
+          </div>
 
           <p className="text-center text-xs text-muted-foreground mt-4">
             Secure payment powered by Paddle. Cancel anytime.
