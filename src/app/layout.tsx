@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PaddleProvider } from "@/components/paddle-provider";
+import { Footer } from "@/components/footer";
 
 export default function RootLayout({
   children,
@@ -25,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen selection:bg-primary selection:text-primary-foreground`}
+        className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col selection:bg-primary selection:text-primary-foreground`}
       >
         <ThemeProvider
           attribute="class"
@@ -35,7 +36,10 @@ export default function RootLayout({
         >
           <PaddleProvider>
             <TooltipProvider>
-              {children}
+              <div className="flex-1 flex flex-col">
+                {children}
+              </div>
+              <Footer />
             </TooltipProvider>
             <Toaster position="bottom-right" />
           </PaddleProvider>
