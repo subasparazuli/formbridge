@@ -1,9 +1,15 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Code, Key, Github } from 'lucide-react';
+import { ArrowRight, Code } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { createClient } from '@/lib/supabase-server';
+import { signOut } from '@/app/auth/actions';
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isLoggedIn = !!user;
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="border-b border-border/50 bg-background/50 backdrop-blur-xl sticky top-0 z-50">
@@ -15,7 +21,18 @@ export default function Home() {
           <nav className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <Link href="/features" className="hover:text-foreground transition-colors">Features</Link>
             <Link href="/guide" className="hover:text-foreground transition-colors">API Guide</Link>
-            <Link href="/login" className="text-foreground hover:text-muted-foreground transition-colors">Sign In</Link>
+            {isLoggedIn ? (
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className="text-foreground hover:text-muted-foreground transition-colors"
+                >
+                  Sign Out
+                </button>
+              </form>
+            ) : (
+              <Link href="/login" className="text-foreground hover:text-muted-foreground transition-colors">Sign In</Link>
+            )}
             <ThemeToggle />
           </nav>
         </div>
@@ -41,7 +58,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <Button size="lg" className="rounded-full px-8 h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-all hover:pr-6 group" asChild>
             <Link href="/dashboard">
-              Start Building <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+              {isLoggedIn ? 'Go to Dashboard' : 'Start Building'} <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
           <Button size="lg" variant="outline" className="rounded-full px-8 h-12 border-border bg-transparent text-foreground hover:bg-secondary hover:text-foreground transition-colors" asChild>
