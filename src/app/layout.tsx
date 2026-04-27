@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default function RootLayout({
   children,
@@ -21,15 +22,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased bg-zinc-950 text-zinc-50 min-h-screen selection:bg-zinc-800 selection:text-white`}
+        className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen selection:bg-primary selection:text-primary-foreground`}
       >
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
-        <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
-        <Toaster theme="dark" position="bottom-right" />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+          <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+          <Toaster position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

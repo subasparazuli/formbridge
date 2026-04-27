@@ -105,16 +105,61 @@ export async function POST(
 
             // 4. Trigger Email Notification via Resend (if configured)
             if (resend && form.notify_email) {
+                const emailHtml = `
+                    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto;">
+                        <div style="border-bottom: 1px solid #e5e5e5; padding-bottom: 16px; margin-bottom: 24px;">
+                            <h2 style="margin: 0; font-size: 18px; color: #171717;">New submission to <strong>${form.name}</strong></h2>
+                            <p style="margin: 4px 0 0; font-size: 13px; color: #737373;">Form ID: ${formId}</p>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            ${Object.entries(data).map(([key, value]) => `
+                                <tr>
+                                    <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-size: 13px; font-weight: 600; color: #525252; background: #fafafa; width: 120px;">${key}</td>
+                                    <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-size: 13px; color: #171717;">${value}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                        <p style="margin-top: 24px; font-size: 12px; color: #a3a3a3;">Sent via Formbridge · Originally to: ${form.notify_email}</p>
+                    </div>
+                `;
+
                 try {
-                    await resend.emails.send({
-                        from: 'Formbridge <notifications@formbridge.dev>', // Update with your verified domain
+                    // Try sending to the form's configured notify_email
+                    const emailResult = await resend.emails.send({
+                        from: 'Formbridge <onboarding@resend.dev>',
                         to: form.notify_email,
                         subject: `New submission to ${form.name}`,
-                        text: `You have received a new submission:\n\n${JSON.stringify(data, null, 2)}`,
-                        // html: `<p>You have received a new submission:</p><pre>${JSON.stringify(data, null, 2)}</pre>`
+                        html: emailHtml,
                     });
-                } catch (emailError) {
-                    console.error('Error sending email:', emailError);
+
+                    // Resend SDK returns { data, error } — check for error
+                    if (emailResult.error) {
+                        console.warn(`[Email] Failed to send to ${form.notify_email}:`, emailResult.error.message);
+
+                        // On free tier, Resend only allows sending to the account owner's email.
+                        // Fall back to DEV_EMAIL_OVERRIDE if configured.
+                        const fallbackEmail = process.env.DEV_EMAIL_OVERRIDE;
+                        if (fallbackEmail) {
+                            console.log(`[Email] Retrying with fallback email: ${fallbackEmail}`);
+                            const retry = await resend.emails.send({
+                                from: 'Formbridge <onboarding@resend.dev>',
+                                to: fallbackEmail,
+                                subject: `New submission to ${form.name}`,
+                                html: emailHtml,
+                            });
+                            if (retry.error) {
+                                console.error('[Email] Fallback also failed:', retry.error.message);
+                            } else {
+                                console.log('[Email] Sent to fallback email successfully:', retry.data?.id);
+                            }
+                        } else {
+                            console.warn('[Email] Tip: Set DEV_EMAIL_OVERRIDE in .env to your Resend account email to receive notifications on the free tier.');
+                        }
+                    } else {
+                        console.log('[Email] Notification sent successfully:', emailResult.data?.id);
+                    }
+                } catch (emailError: any) {
+                    console.error('[Email] Error sending notification:', emailError?.message || emailError);
                     // Don't fail the whole request if email fails
                 }
             }

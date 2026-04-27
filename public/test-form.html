@@ -3,26 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Formbridge Submission</title>
+    <title>Test Your Endpoint — Formbridge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #fafafa;
+            --bg-card: #f3f3f3;
+            --fg: #171717;
+            --fg-muted: #525252;
+            --border: #e0e0e0;
+            --primary: #1a1a1a;
+            --primary-fg: #fafafa;
+            --accent: #10b981;
+            --accent-soft: rgba(16, 185, 129, 0.1);
+            --red: #ef4444;
+            --red-soft: rgba(239, 68, 68, 0.1);
+            --radius: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0a0a0a;
+                --bg-card: #171717;
+                --fg: #fafafa;
+                --fg-muted: #a3a3a3;
+                --border: #2a2a2a;
+                --primary: #fafafa;
+                --primary-fg: #0a0a0a;
+                --accent: #10b981;
+                --accent-soft: rgba(16, 185, 129, 0.1);
+                --red-soft: rgba(239, 68, 68, 0.08);
+            }
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 640px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+        .header a {
+            color: var(--fg-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: color 0.2s;
+        }
+        .header a:hover { color: var(--fg); }
+        .logo {
+            height: 28px;
+            width: 28px;
+            border-radius: 6px;
+            background: var(--fg);
+            color: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .header-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: var(--fg-muted);
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        /* Card */
+        .card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .card-desc {
+            color: var(--fg-muted);
+            font-size: 0.8125rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Form elements */
+        label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+            color: var(--fg);
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: inherit;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--fg-muted);
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        input::placeholder, textarea::placeholder {
+            color: var(--fg-muted);
+            opacity: 0.5;
+        }
+        .field { margin-bottom: 1rem; }
+        .field:last-of-type { margin-bottom: 1.5rem; }
+
+        .endpoint-input {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8125rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-fg);
+        }
+        .btn-primary:hover { opacity: 0.88; }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--fg-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover {
+            color: var(--fg);
+            border-color: var(--fg-muted);
+        }
+
+        /* Response panel */
+        .response-panel {
+            margin-top: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+        .response-panel.visible { display: block; }
+        .response-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.625rem 0.875rem;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-badge.success { background: var(--accent-soft); color: var(--accent); }
+        .status-badge.error { background: var(--red-soft); color: var(--red); }
+        .response-body {
+            padding: 0.875rem;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8125rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: var(--fg-muted);
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        /* Honeypot card */
+        .honeypot-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: var(--accent-soft);
+            font-size: 0.8125rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0.5rem 0 1.5rem;
+        }
+
+        /* Spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--primary-fg);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8125rem;
+            color: var(--fg-muted);
+        }
+        .footer a {
+            color: var(--fg);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .footer a:hover { opacity: 0.7; }
+
+        /* Mode toggle */
+        .mode-tabs {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            margin-bottom: 1.5rem;
+        }
+        .mode-tab {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--fg-muted);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .mode-tab.active {
+            background: var(--fg);
+            color: var(--bg);
+        }
+    </style>
 </head>
 <body>
-    <h1>Submit to Formbridge API</h1>
-    
-    <h3>Normal Submission</h3>
-    <form id="normal-form" action="/api/f/123e4567-e89b-12d3-a456-426614174000" method="POST">
-        <label>Email: <input type="email" name="email" value="test@example.com"></label><br><br>
-        <label>Message: <textarea name="message">Hello world from the browser agent!</textarea></label><br><br>
-        <button type="submit" id="submit-normal">Submit Normal</button>
-    </form>
 
-    <hr>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <a href="/">
+            <span class="logo">Fb</span>
+            <span class="header-title">Formbridge</span>
+        </a>
+        <span style="color: var(--fg-muted); font-size: 0.875rem;">/</span>
+        <span style="color: var(--fg-muted); font-size: 0.875rem;">Test Form</span>
+    </div>
 
-    <h3>Spam (Honeypot) Submission</h3>
-    <form id="spam-form" action="/api/f/123e4567-e89b-12d3-a456-426614174000" method="POST">
-        <label>Email: <input type="email" name="email" value="spammer@example.com"></label><br><br>
-        <!-- Honeypot field (normally hidden via CSS) -->
-        <label style="color:red">Honeypot (DO NOT FILL): <input type="text" name="_my_honeypot" value="im-a-bot"></label><br><br>
-        <button type="submit" id="submit-spam">Submit Spam</button>
-    </form>
+    <h1>Test Your Endpoint</h1>
+    <p class="subtitle">
+        Enter your Formbridge endpoint URL below and submit test data. 
+        The response from the API will appear inline.
+    </p>
+
+    <!-- Endpoint URL -->
+    <div class="card">
+        <div class="field">
+            <label for="endpoint-url">Endpoint URL</label>
+            <input
+                type="url"
+                id="endpoint-url"
+                class="endpoint-input"
+                placeholder="http://localhost:3000/api/f/your-form-id"
+                value=""
+            >
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="normal" onclick="switchMode('normal')">Normal Submission</button>
+            <button class="mode-tab" data-mode="honeypot" onclick="switchMode('honeypot')">Honeypot Test</button>
+        </div>
+
+        <!-- Normal Form -->
+        <form id="normal-form" onsubmit="return handleSubmit(event, 'normal')">
+            <div class="field">
+                <label for="test-email">Email</label>
+                <input type="email" id="test-email" name="email" placeholder="you@example.com" value="test@example.com">
+            </div>
+            <div class="field">
+                <label for="test-name">Name</label>
+                <input type="text" id="test-name" name="name" placeholder="John Doe" value="Test User">
+            </div>
+            <div class="field">
+                <label for="test-message">Message</label>
+                <textarea id="test-message" name="message" placeholder="Your message...">Hello from the Formbridge test form!</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+                Send Test Submission
+            </button>
+        </form>
+
+        <!-- Honeypot Form (hidden by default) -->
+        <form id="honeypot-form" style="display:none;" onsubmit="return handleSubmit(event, 'honeypot')">
+            <div class="honeypot-note">
+                <span>🍯</span>
+                <span>This simulates a bot filling in the honeypot field. The API should silently accept it (200 OK) but <strong>not</strong> save the submission.</span>
+            </div>
+            <div class="field">
+                <label for="hp-email">Email</label>
+                <input type="email" id="hp-email" name="email" value="spammer@bot.net">
+            </div>
+            <div class="field">
+                <label for="hp-honeypot">Honeypot Field <span style="color: var(--red); font-weight: 600;">(filled = spam)</span></label>
+                <input type="text" id="hp-honeypot" name="_my_honeypot" value="im-a-bot" style="border-color: var(--red);">
+            </div>
+            <button type="submit" class="btn btn-primary" id="submit-hp-btn">
+                Send Honeypot Submission
+            </button>
+        </form>
+
+        <!-- Response -->
+        <div class="response-panel" id="response-panel">
+            <div class="response-header">
+                <span>Response</span>
+                <span class="status-badge" id="status-badge"></span>
+            </div>
+            <div class="response-body" id="response-body"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="/guide">Read the API Guide</a> · <a href="/dashboard">Go to Dashboard</a>
+    </div>
+</div>
+
+<script>
+    function switchMode(mode) {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+        document.getElementById('normal-form').style.display = mode === 'normal' ? 'block' : 'none';
+        document.getElementById('honeypot-form').style.display = mode === 'honeypot' ? 'block' : 'none';
+        document.getElementById('response-panel').classList.remove('visible');
+    }
+
+    async function handleSubmit(e, type) {
+        e.preventDefault();
+        const url = document.getElementById('endpoint-url').value.trim();
+
+        if (!url) {
+            alert('Please enter your endpoint URL first.');
+            return false;
+        }
+
+        const form = type === 'normal' ? document.getElementById('normal-form') : document.getElementById('honeypot-form');
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Sending...';
+
+        try {
+            const formData = new FormData(form);
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(formData)),
+            });
+
+            const data = await res.json();
+            const panel = document.getElementById('response-panel');
+            const badge = document.getElementById('status-badge');
+            const body = document.getElementById('response-body');
+
+            panel.classList.add('visible');
+            badge.textContent = `${res.status} ${res.statusText}`;
+            badge.className = 'status-badge ' + (res.ok ? 'success' : 'error');
+            body.textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+            const panel = document.getElementById('response-panel');
+            const badge = document.getElementById('status-badge');
+            const body = document.getElementById('response-body');
+
+            panel.classList.add('visible');
+            badge.textContent = 'Network Error';
+            badge.className = 'status-badge error';
+            body.textContent = err.message;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+
+        return false;
+    }
+
+    // Pre-fill endpoint URL from query parameter
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const prefilledUrl = params.get('url');
+        if (prefilledUrl) {
+            document.getElementById('endpoint-url').value = prefilledUrl;
+        }
+    })();
+</script>
+
 </body>
 </html>

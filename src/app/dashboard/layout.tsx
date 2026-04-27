@@ -1,16 +1,37 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { Button } from '@/components/ui/button';
+import { LogOut, Github } from 'lucide-react';
+import { createClient } from '@/lib/supabase-browser';
+import { signOut } from '@/app/auth/actions';
+
 export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const [userEmail, setUserEmail] = useState<string>('');
+    const supabase = createClient();
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) setUserEmail(user.email || '');
+        };
+        getUser();
+    }, []);
+
     return (
-        <div className="min-h-screen bg-zinc-950">
-            <header className="border-b border-zinc-800/50 bg-black/50 backdrop-blur-md sticky top-0 z-10">
+        <div className="min-h-screen">
+            <header className="border-b border-border/50 bg-background/50 backdrop-blur-md sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="font-semibold text-lg tracking-tight flex items-center gap-2">
-                        <span className="h-6 w-6 rounded-md bg-white text-black flex items-center justify-center text-xs font-bold ring-1 ring-zinc-100">Fb</span>
-                        Formbridge <span className="text-zinc-600 font-normal">/</span> <span className="text-zinc-400 font-normal">Dashboard</span>
-                    </div>
+                    <Link href="/" className="font-semibold text-lg tracking-tight flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-md bg-foreground text-background flex items-center justify-center text-xs font-bold ring-1 ring-border">Fb</span>
+                        Formbridge <span className="text-muted-foreground font-normal">/</span> <span className="text-muted-foreground font-normal">Dashboard</span>
+                    </Link>
                     <div className="flex items-center gap-4">
                         <a
                             href="https://formbridgesaas.lemonsqueezy.com/buy/12345?checkout[custom][user_id]=user_123"
@@ -19,9 +40,24 @@ export default function DashboardLayout({
                             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             Upgrade to Pro
                         </a>
-                        <div className="h-8 w-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs text-zinc-400 font-medium">
-                            SP
-                        </div>
+                        {userEmail && (
+                            <span className="text-sm text-muted-foreground hidden sm:block">{userEmail}</span>
+                        )}
+                        <a href="https://github.com/subasparazuli/formbridge" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                            <Github className="h-4 w-4" />
+                        </a>
+                        <form action={signOut}>
+                            <Button
+                                type="submit"
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-foreground hover:bg-muted transition-colors gap-2"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                <span className="hidden sm:inline">Sign Out</span>
+                            </Button>
+                        </form>
+                        <ThemeToggle />
                     </div>
                 </div>
             </header>

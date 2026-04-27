@@ -5,12 +5,11 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Plus, Activity, Settings, Check, Loader2, LogOut } from "lucide-react";
+import { Copy, Plus, Activity, Settings, Check, Loader2, FlaskConical } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase-browser";
-import { signOut } from "@/app/auth/actions";
 
 interface Form {
     id: string;
@@ -129,74 +128,48 @@ export default function Dashboard() {
 
     return (
         <div>
-            {/* Dashboard Header */}
-            <header className="border-b border-zinc-800/50 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <Link href="/" className="font-semibold text-xl tracking-tight flex items-center gap-2">
-                        <span className="h-6 w-6 rounded-md bg-white text-black flex items-center justify-center text-xs font-bold ring-1 ring-zinc-100">Fb</span>
-                        Formbridge
-                    </Link>
-                    <div className="flex items-center gap-4">
-                        {userEmail && (
-                            <span className="text-sm text-zinc-400 hidden sm:block">{userEmail}</span>
-                        )}
-                        <form action={signOut}>
-                            <Button
-                                type="submit"
-                                variant="ghost"
-                                size="sm"
-                                className="text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors gap-2"
-                            >
-                                <LogOut className="h-4 w-4" />
-                                <span className="hidden sm:inline">Sign Out</span>
-                            </Button>
-                        </form>
-                    </div>
-                </div>
-            </header>
-
             <main className="max-w-7xl mx-auto px-6 py-12">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-zinc-50">Endpoints</h1>
-                        <p className="text-zinc-400 mt-1">Manage and monitor your headless API endpoints.</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Endpoints</h1>
+                        <p className="text-muted-foreground mt-1">Manage and monitor your headless API endpoints.</p>
                     </div>
 
                     <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-white text-black hover:bg-zinc-200 transition-colors shadow-none font-medium">
+                            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-none font-medium">
                                 <Plus className="mr-2 h-4 w-4" /> Create Endpoint
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-zinc-50">
+                        <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
                                 <DialogTitle>Create New Endpoint</DialogTitle>
-                                <DialogDescription className="text-zinc-400">
+                                <DialogDescription>
                                     Create a new headless form endpoint to start receiving submissions.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="name" className="text-right text-zinc-300">
+                                    <Label htmlFor="name" className="text-right">
                                         Name
                                     </Label>
                                     <Input
                                         id="name"
                                         placeholder="e.g. Waitlist Form"
-                                        className="col-span-3 bg-zinc-900 border-zinc-800 text-zinc-100"
+                                        className="col-span-3"
                                         value={newFormName}
                                         onChange={(e) => setNewFormName(e.target.value)}
                                     />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="email" className="text-right text-zinc-300">
+                                    <Label htmlFor="email" className="text-right">
                                         Notify Email
                                     </Label>
                                     <Input
                                         id="email"
                                         type="email"
                                         placeholder="your@email.com"
-                                        className="col-span-3 bg-zinc-900 border-zinc-800 text-zinc-100"
+                                        className="col-span-3"
                                         value={newFormEmail}
                                         onChange={(e) => setNewFormEmail(e.target.value)}
                                     />
@@ -206,7 +179,7 @@ export default function Dashboard() {
                                 <Button
                                     type="submit"
                                     onClick={handleCreate}
-                                    className="bg-white text-black hover:bg-zinc-200"
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90"
                                     disabled={isCreating}
                                 >
                                     {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -219,31 +192,31 @@ export default function Dashboard() {
 
                 {isLoading ? (
                     <div className="flex justify-center py-20">
-                        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : forms.length === 0 ? (
-                    <div className="text-center py-20 bg-zinc-900/40 rounded-xl border border-zinc-800/60 border-dashed">
-                        <p className="text-zinc-400 mb-4">No endpoints created yet.</p>
-                        <Button onClick={() => setIsCreateOpen(true)} variant="outline" className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800">
+                    <div className="text-center py-20 bg-muted/40 rounded-xl border border-border border-dashed">
+                        <p className="text-muted-foreground mb-4">No endpoints created yet.</p>
+                        <Button onClick={() => setIsCreateOpen(true)} variant="outline">
                             Create your first endpoint
                         </Button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {forms.map(form => (
-                            <Card key={form.id} className="bg-zinc-900/40 border-zinc-800/60 shadow-none hover:bg-zinc-900/80 transition-colors group">
+                            <Card key={form.id} className="bg-card/60 border-border shadow-none hover:bg-card/90 transition-colors group">
                                 <CardHeader className="pb-4">
                                     <div className="flex justify-between items-start">
                                         <Link href={`/dashboard/${form.id}`} className="block flex-1">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                                                <CardTitle className="text-base text-zinc-100 font-medium group-hover:text-white transition-colors">
+                                                <CardTitle className="text-base text-foreground font-medium group-hover:text-foreground/80 transition-colors">
                                                     {form.name}
                                                 </CardTitle>
                                             </div>
-                                            <CardDescription className="text-zinc-500 text-sm">{form.notify_email}</CardDescription>
+                                            <CardDescription className="text-muted-foreground text-sm">{form.notify_email}</CardDescription>
                                         </Link>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 shrink-0">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0">
                                             <Settings className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -253,26 +226,39 @@ export default function Dashboard() {
                                         <Input
                                             readOnly
                                             value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/f/${form.id}`}
-                                            className="bg-black/50 border-zinc-800 text-zinc-400 font-mono text-xs h-9 focus-visible:ring-0 cursor-text"
+                                            className="bg-muted/50 border-border text-muted-foreground font-mono text-xs h-9 focus-visible:ring-0 cursor-text"
                                         />
                                         <Button
                                             size="icon"
                                             variant="outline"
                                             onClick={() => copyToClipboard(form.id)}
-                                            className="h-9 w-9 border-zinc-800 bg-black/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors shrink-0"
+                                            className="h-9 w-9 border-border bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
                                         >
                                             {copiedId === form.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                                         </Button>
+                                        <a
+                                            href={`/test-form.html?url=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/api/f/${form.id}`)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <Button
+                                                size="icon"
+                                                variant="outline"
+                                                className="h-9 w-9 border-border bg-muted/50 text-muted-foreground hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-colors shrink-0"
+                                            >
+                                                <FlaskConical className="h-4 w-4" />
+                                            </Button>
+                                        </a>
                                     </div>
                                     <Link href={`/dashboard/${form.id}`}>
-                                        <div className="flex gap-8 text-sm border-t border-zinc-800/50 pt-4 mt-2 cursor-pointer group/stats">
+                                        <div className="flex gap-8 text-sm border-t border-border/50 pt-4 mt-2 cursor-pointer group/stats">
                                             <div>
-                                                <div className="text-xl font-medium text-zinc-200 mb-1 group-hover/stats:text-white transition-colors">{(form.submission_count || 0).toLocaleString()}</div>
-                                                <div className="text-zinc-500 flex items-center gap-1.5"><Activity className="h-3.5 w-3.5" /> Submissions</div>
+                                                <div className="text-xl font-medium text-foreground mb-1 group-hover/stats:text-foreground/80 transition-colors">{(form.submission_count || 0).toLocaleString()}</div>
+                                                <div className="text-muted-foreground flex items-center gap-1.5"><Activity className="h-3.5 w-3.5" /> Submissions</div>
                                             </div>
                                             <div>
-                                                <div className="text-xl font-medium text-zinc-200 mb-1 group-hover/stats:text-white transition-colors">{form.last_activity}</div>
-                                                <div className="text-zinc-500">Last Activity</div>
+                                                <div className="text-xl font-medium text-foreground mb-1 group-hover/stats:text-foreground/80 transition-colors">{form.last_activity}</div>
+                                                <div className="text-muted-foreground">Last Activity</div>
                                             </div>
                                         </div>
                                     </Link>
