@@ -15,9 +15,6 @@ export default function Home() {
           <nav className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
             <Link href="/guide" className="hover:text-foreground transition-colors">API Guide</Link>
-            <a href="https://github.com/subasparazuli/formbridge" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-              <Github className="h-4 w-4" />
-            </a>
             <Link href="/login" className="text-foreground hover:text-muted-foreground transition-colors">Sign In</Link>
             <ThemeToggle />
           </nav>
