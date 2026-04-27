@@ -13,7 +13,7 @@ export default function Home() {
             Formbridge
           </div>
           <nav className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
-            <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
+            <Link href="/features" className="hover:text-foreground transition-colors">Features</Link>
             <Link href="/guide" className="hover:text-foreground transition-colors">API Guide</Link>
             <Link href="/login" className="text-foreground hover:text-muted-foreground transition-colors">Sign In</Link>
             <ThemeToggle />
@@ -45,8 +45,8 @@ export default function Home() {
             </Link>
           </Button>
           <Button size="lg" variant="outline" className="rounded-full px-8 h-12 border-border bg-transparent text-foreground hover:bg-secondary hover:text-foreground transition-colors" asChild>
-            <Link href="#docs">
-              <Code className="mr-2 h-4 w-4 text-muted-foreground" /> Read Docs
+            <Link href="/guide">
+              <Code className="mr-2 h-4 w-4 text-muted-foreground" /> API Guide
             </Link>
           </Button>
         </div>

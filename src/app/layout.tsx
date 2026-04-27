@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PaddleProvider } from "@/components/paddle-provider";
 
 export default function RootLayout({
   children,
@@ -32,11 +33,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-          <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
-          <Toaster position="bottom-right" />
+          <PaddleProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+            <Toaster position="bottom-right" />
+          </PaddleProvider>
         </ThemeProvider>
       </body>
     </html>

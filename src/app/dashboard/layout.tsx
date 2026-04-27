@@ -33,19 +33,16 @@ export default function DashboardLayout({
                         Formbridge <span className="text-muted-foreground font-normal">/</span> <span className="text-muted-foreground font-normal">Dashboard</span>
                     </Link>
                     <div className="flex items-center gap-4">
-                        <a
-                            href="https://formbridgesaas.lemonsqueezy.com/buy/12345?checkout[custom][user_id]=user_123"
-                            className="lemonsqueezy-button bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-medium px-4 py-1.5 rounded-full transition-colors flex items-center gap-2"
+                        <Link
+                            href="/pro"
+                            className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-medium px-4 py-1.5 rounded-full transition-colors flex items-center gap-2"
                         >
                             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             Upgrade to Pro
-                        </a>
+                        </Link>
                         {userEmail && (
                             <span className="text-sm text-muted-foreground hidden sm:block">{userEmail}</span>
                         )}
-                        <a href="https://github.com/subasparazuli/formbridge" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                            <Github className="h-4 w-4" />
-                        </a>
                         <form action={signOut}>
                             <Button
                                 type="submit"
